@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAVER-KIT: TOKEN QUEST RPG (REVISI FULL)</title>
+<style>
+:root {
+  --ink: #071321;
+  --panel: #102b42;
+  --line: #ffffff22;
+  --text: #f4fbff;
+  --muted: #aac0cf;
+  --green: #5df0aa;
+  --yellow: #ffd166;
+  --red: #ff6b6b;
+  --blue: #63b7ff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #06101c;
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+}
+.hidden { display: none !important; }
+.top {
+  height: 58px;
+  background: #081827f2;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4%;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.top b { color: var(--green); }
+.wrap { width: min(1280px, 96%); margin: auto; padding: 16px 0 40px; }
+.hero {
+  text-align: center;
+  padding: 60px 10px;
+  background: radial-gradient(circle, #174d5b, #06101c 65%);
+  min-height: calc(100vh - 58px);
+}
+h1 {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  margin: 5px;
+  color: var(--green);
+  text-shadow: 0 0 30px #5df0aa55;
+}
+.hero p { max-width: 680px; margin: 20px auto; color: var(--muted); line-height: 1.7; }
+.card {
+  background: linear-gradient(145deg, #153953, #091a2a);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+}
+.btn, button {
+  border: 0;
+  border-radius: 11px;
+  padding: 11px 15px;
+  font-weight: bold;
+  cursor: pointer;
+  background: var(--green);
+  color: #052016;
+}
+.btn:hover, button:hover { filter: brightness(1.12); }
+.alt { background: #ffffff12; color: white; border: 1px solid var(--line); }
+.btn-red { background: var(--red); color: white; }
+input {
+  padding: 12px;
+  border-radius: 10px;
+  background: #06101c;
+  color: white;
+  border: 1px solid var(--line);
+}
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 12px; }
+.stat { background: #0d2335; border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+.stat b { display: block; color: var(--green); }
+.stat small { color: var(--muted); }
+.gameLayout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; }
+.quest { font-size: 0.88rem; padding: 8px; border-bottom: 1px solid #ffffff12; color: var(--muted); }
+.done { color: var(--green); text-decoration: line-through; }
+.world {
+  position: relative;
+  height: min(680px, 72vh);
+  min-height: 520px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid #ffffff18;
+  background: linear-gradient(#79c9ef 0 48%, #62a94b 49% 100%);
+}
+.house {
+  position: absolute;
+  left: 15%;
+  top: 24%;
+  width: 50%;
+  height: 50%;
+  background: #e7d0a4;
+  border: 6px solid #8e6e4a;
+  border-radius: 18px;
+  box-shadow: 0 12px 0 #6b4f36;
+}
+.roof {
+  position: absolute;
+  left: -7%;
+  top: -18%;
+  width: 114%;
+  height: 25%;
+  background: #bd5a49;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.shopBuilding {
+  position: absolute;
+  right: 6%;
+  top: 15%;
+  width: 22%;
+  height: 35%;
+  background: #3a506b;
+  border: 4px solid #1c2541;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  padding-top: 5px;
+  box-shadow: 0 8px 0 #0b132b;
+  cursor: pointer;
+}
+.shopSign {
+  background: var(--yellow);
+  color: #000;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin: 0 5px;
+}
+.room {
+  position: absolute;
+  border: 2px solid #85623f;
+  background: #f1dfba;
+  color: #222;
+  padding: 4px;
+  font-size: 11px;
+  overflow: hidden;
+}
+.living { left: 3%; top: 8%; width: 45%; height: 43%; }
+.kitchen { right: 3%; top: 8%; width: 45%; height: 43%; }
+.bed { left: 3%; bottom: 5%; width: 45%; height: 37%; }
+.bath { right: 3%; bottom: 5%; width: 45%; height: 37%; }
+.player, .npc {
+  position: absolute;
+  width: 42px;
+  height: 52px;
+  z-index: 8;
+  transition: left 0.08s linear, top 0.08s linear;
+  filter: drop-shadow(0 5px 3px #0005);
+}
+.player:before, .npc:before { content: '🧑'; font-size: 40px; }
+.prof:before { content: '🧙'; filter: hue-rotate(120deg); }
+.seller:before { content: '👨‍💼'; }
+.npcProf { left: 8%; top: 65%; }
+.npcSeller { right: 12%; top: 38%; }
+.label {
+  position: absolute;
+  top: -22px;
+  left: -12px;
+  background: #000b;
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.meterBox {
+  position: absolute;
+  left: 17%;
+  top: 15%;
+  background: #172735;
+  color: #70ffb0;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: monospace;
+  border: 3px solid #607080;
+  box-shadow: 0 0 15px #0008;
+  z-index: 5;
+}
+.meterBox b { font-size: 15px; }
+.meterBar { height: 7px; background: #06101c; border-radius: 9px; overflow: hidden; margin-top: 5px; }
+.meterBar i { display: block; height: 100%; background: var(--green); transition: width 0.5s; }
+.meterStatus { font-size: 10px; font-weight: bold; margin-top: 4px; text-align: center; }
+.meterStatus.on { color: var(--green); }
+.meterStatus.off { color: var(--red); }
+.object { position: absolute; font-size: 32px; cursor: pointer; filter: drop-shadow(0 3px 2px #0004); }
+.object.on { filter: drop-shadow(0 0 15px #ffe87c); }
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  background: #000c;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #fff;
+  text-align: center;
+  font-size: 0.85rem;
+  border: 1px solid var(--green);
+}
+.dialog {
+  position: fixed;
+  inset: 0;
+  background: #0008;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 22px;
+}
+.dialogbox {
+  width: min(900px, 100%);
+  min-height: 160px;
+  background: linear-gradient(145deg, #153d59, #071827);
+  border: 2px solid var(--green);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 0 35px #5df0aa33;
+}
+.speaker { color: var(--yellow); font-weight: 900; font-size: 1.1rem; }
+.dialogText { font-size: 1.05rem; line-height: 1.6; min-height: 50px; margin-top: 8px; white-space: pre-line; }
+.choices { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 12px; }
+.choice { background: #ffffff12; color: white; border: 1px solid var(--line); }
+.devicePanel {
+  position: absolute;
+  left: 10px;
+  bottom: 50px;
+  background: #06101ce8;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  max-width: 280px;
+  z-index: 10;
+}
+.devicePanel button { padding: 6px 10px; margin: 3px; font-size: 11px; }
+.toast {
+  position: fixed;
+  right: 18px;
+  top: 70px;
+  background: #12384b;
+  border-left: 4px solid var(--green);
+  padding: 12px;
+  border-radius: 10px;
+  z-index: 60;
+  transform: translateX(130%);
+  transition: 0.4s;
+}
+.toast.show { transform: none; }
+@media(max-width:800px) {
+  .gameLayout { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .world { height: 600px; }
+  .house { left: 5%; width: 62%; }
+  .shopBuilding { right: 2%; width: 28%; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>⚡ <b>SAVER-KIT</b> | TOKEN QUEST RPG</div>
+  <div id="playerName">Energy Explorer</div>
+</header>
+
+<div class="wrap">
+  <!-- SKRIN AWAL -->
+  <section id="startScreen" class="hero">
+    <div style="font-size:5rem">🏠 ⚡ 🧑‍🚀</div>
+    <h1>TOKEN QUEST</h1>
+    <h2>Kenapa Token Listrik Rumah Cepat Habis?</h2>
+    <p>Game RPG Simulasi Fisika Listrik: Berjalanlah menjelajahi area, kunjungi Kios PLN untuk membeli kode token, nyalakan/matikan sakelar meteran, kontrol alat listrik di tiap ruangan, dan aktifkan sensor pintar SAVER-KIT!</p>
+    <div class="card" style="max-width:480px;margin:30px auto">
+      <input id="playerInput" placeholder="Masukkan Nama Karakter Kamu..." style="width:100%">
+      <div style="height:12px"></div>
+      <button id="startBtn" class="btn" style="width:100%; font-size:1.1rem">▶ MULAI PETUALANGAN</button>
+      <p style="font-size:.8rem;color:#aac0cf;margin-top:12px">Kontrol Utama: Gunakan tombol Panah (⬅️ ➡️ ⬆️ ⬇️) atau WASD • Tekan <b>E</b> untuk Interaksi</p>
+    </div>
+  </section>
+
+  <!-- SKRIN GAME -->
+  <section id="gameScreen" class="hidden">
+    <div class="stats">
+      <div class="stat"><b id="money">Rp150.000</b><small>UANG TUNAI</small></div>
+      <div class="stat"><b id="kwh">2.50 kWh</b><small>SISA TOKEN (kWh)</small></div>
+      <div class="stat"><b id="power">0 W</b><small>DAYA AKTIF</small></div>
+      <div class="stat"><b id="xp">0 XP</b><small>PENGETAHUAN</small></div>
+      <div class="stat"><b id="eco">0</b><small>ECO POINT</small></div>
+    </div>
+
+    <div class="gameLayout">
+      <aside class="card">
+        <h3>📜 DAFTAR MISI (QUEST)</h3>
+        <div id="questList"></div>
+        <h3 style="margin-top:15px">🎒 INVENTARIS</h3>
+        <div id="inventory"></div>
+        <hr style="margin: 15px 0; border:0; border-top:1px solid var(--line)">
+        <button class="alt" onclick="showHelp()" style="width:100%">🎮 Petunjuk Kontrol</button>
+      </aside>
+
+      <main class="card">
+        <div id="world" class="world">
+          <!-- BANGUNAN RUMAH -->
+          <div class="house">
+            <div class="roof"></div>
+            <div class="room living">🛋 RUANG TAMU</div>
+            <div class="room kitchen">🍳 DAPUR</div>
+            <div class="room bed">🛏 KAMAR</div>
+            <div class="room bath">🚿 KAMAR MANDI</div>
+          </div>
+
+          <!-- BANGUNAN TOKO TOKEN -->
+          <div class="shopBuilding" onclick="shop()">
+            <div class="shopSign">🏪 KIOS PLN / TOKEN</div>
+            <br>Beli Token Listrik Di Sini
+          </div>
+
+          <!-- METERAN KWH -->
+          <div id="meterBox" class="meterBox">
+            ⚡ METER kWh<br>
+            <b id="meterText">2.50 kWh</b>
+            <div class="meterBar"><i id="meterFill" style="width:8%"></i></div>
+            <div id="meterStatus" class="meterStatus off">SAKELAR: OFF</div>
+            <button id="meterInteract" style="margin-top:6px;width:100%;font-size:10px">E Isi / Kelola Meteran</button>
+          </div>
+
+          <!-- NPC & PLAYER -->
+          <div id="npcProf" class="npc prof npcProf"><span class="label">Prof. Watt [E]</span></div>
+          <div id="npcSeller" class="npc seller npcSeller" onclick="shop()"><span class="label">Kasir Token [E]</span></div>
+          <div id="player" class="player" style="left:48%; top:75%"><span class="label" id="playerLabel">Explorer</span></div>
+
+          <!-- PERALATAN LISTRIK -->
+          <div id="lamp" class="object" style="left:23%;top:38%">💡</div>
+          <div id="tv" class="object" style="left:30%;top:44%">📺</div>
+          <div id="rice" class="object" style="left:50%;top:40%">🍚</div>
+          <div id="ac" class="object" style="left:24%;top:58%">❄️</div>
+          <div id="bathLamp" class="object" style="left:53%;top:60%">💡</div>
+          <div id="yardLamp" class="object" style="left:68%;top:68%">💡</div>
+
+          <div id="devicePanel" class="devicePanel hidden"></div>
+          <div id="hintBox" class="hint">Dekati Profesor Watt atau Kios Token lalu tekan E</div>
+        </div>
+
+        <div class="controls" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+          <button id="shopBtn">🏪 Kunjungi Kios Token</button>
+          <button id="smartBtn">🤖 SAVER-KIT Smart Lab</button>
+          <button id="speedBtn" class="alt">⏩ Simulasi Waktu: x1</button>
+          <button id="reportBtn" class="alt">📊 Laporan Akhir</button>
+        </div>
+      </main>
+    </div>
+  </section>
+</div>
+
+<!-- KOTAK DIALOG -->
+<div id="dialog" class="dialog hidden">
+  <div class="dialogbox">
+    <div class="speaker" id="speaker"></div>
+    <div class="dialogText" id="dialogText"></div>
+    <div class="choices" id="dialogChoices"></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const state = {
+  name: 'Energy Explorer',
+  money: 150000,
+  kwh: 2.5,
+  maxKwh: 35,
+  xp: 0,
+  eco: 0,
+  isMeterOn: false, // Fitur nyalakan meteran
+  quests: new Set(),
+  inventory: ['🔑 Kunci Rumah'],
+  tokenCode: null,
+  pendingKwh: 0,
+  devices: {
+    lamp: { name: '💡 Lampu Ruang Tamu', w: 10, on: false, room: 'Ruang Tamu' },
+    tv: { name: '📺 TV LED 42 Inchi', w: 80, on: false, room: 'Ruang Tamu' },
+    rice: { name: '🍚 Rice Cooker', w: 300, on: false, room: 'Dapur' },
+    ac: { name: '❄️ Pendingin Ruangan (AC)', w: 500, on: false, room: 'Kamar' },
+    bathLamp: { name: '🚿 Lampu Kamar Mandi', w: 20, on: false, room: 'Kamar Mandi' },
+    yardLamp: { name: '🌙 Lampu Halaman luar', w: 20, on: false, room: 'Halaman' }
+  },
+  player: { x: 48, y: 75 },
+  speed: 1,
+  pir: false,
+  ldr: false
+};
+
+const quests = [
+  'Beli Token Listrik di Kios PLN',
+  'Masukkan 20 Angka Token ke Meteran',
+  'Nyalakan Sakelar Utama Meteran',
+  'Nyalakan Peralatan Listrik Rumah',
+  'Pahami Konsep Energi = Daya × Waktu',
+  'Pasang Sensor Otomatis PIR & LDR',
+  'Kalahkan Monster Pemboros Energi',
+  'Raih Gelar Master Hemat Listrik'
+];
+
+const el = id => document.getElementById(id);
+
+function rp(n) {
+  return 'Rp' + Math.round(n).toLocaleString('id-ID');
+}
+
+function updateHUD() {
+  el('money').textContent = rp(state.money);
+  el('kwh').textContent = state.kwh.toFixed(2) + ' kWh';
+  el('xp').textContent = state.xp + ' XP';
+  el('eco').textContent = state.eco;
+
+  // Daya aktif bernilai 0 jika meteran mati (OFF)
+  let activePower = state.isMeterOn 
+    ? Object.values(state.devices).filter(d => d.on).reduce((a, b) => a + b.w, 0)
+    : 0;
+  
+  el('power').textContent = activePower + ' W';
+  el('meterText').textContent = state.kwh.toFixed(2) + ' kWh';
+  el('meterFill').style.width = Math.min(100, (state.kwh / state.maxKwh) * 100) + '%';
+  
+  const mStatus = el('meterStatus');
+  if (state.isMeterOn) {
+    mStatus.textContent = 'SAKELAR: ON';
+    mStatus.className = 'meterStatus on';
+  } else {
+    mStatus.textContent = 'SAKELAR: OFF';
+    mStatus.className = 'meterStatus off';
+  }
+
+  el('questList').innerHTML = quests.map((q, i) =>
+    `<div class="quest ${state.quests.has(i) ? 'done' : ''}">${state.quests.has(i) ? '✓' : '☐'} ${q}</div>`
+  ).join('');
+
+  el('inventory').innerHTML = state.inventory.map(item => `<div>• ${item}</div>`).join('');
+
+  Object.keys(state.devices).forEach(id => {
+    let elem = el(id);
+    if(elem) elem.classList.toggle('on', state.devices[id].on && state.isMeterOn);
+  });
+}
+
+function completeQuest(index) {
+  if (!state.quests.has(index)) {
+    state.quests.add(index);
+    toast('🎉 Misi Selesai: ' + quests[index]);
+    updateHUD();
+  }
+}
+
+function toast(msg) {
+  el('toast').textContent = msg;
+  el('toast').classList.add('show');
+  setTimeout(() => el('toast').classList.remove('show'), 3000);
+}
+
+function playSound(type = 'click') {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = type === 'ok' ? 740 : type === 'warn' ? 180 : 480;
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch (e) {}
+}
+
+function showDialog(speaker, text, choices = []) {
+  el('speaker').textContent = speaker;
+  el('dialogText').textContent = text;
+  el('dialog').classList.remove('hidden');
+
+  const container = el('dialogChoices');
+  container.innerHTML = '';
+
+  choices.forEach(([label, action]) => {
+    let btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = label;
+    btn.onclick = () => {
+      playSound('click');
+      closeDialog();
+      if (action) action();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function closeDialog() {
+  el('dialog').classList.add('hidden');
+}
+
+function startGame() {
+  state.name = el('playerInput').value.trim() || 'Energy Explorer';
+  el('playerName').textContent = '🦸 ' + state.name;
+  el('playerLabel').textContent = state.name;
+  el('startScreen').classList.add('hidden');
+  el('gameScreen').classList.remove('hidden');
+  updateHUD();
+
+  showDialog(
+    '⚡ PROFESOR WATT',
+    `Selamat datang di Token Quest, ${state.name}!\n\nMeteran listrik rumahmu dalam keadaan sakelar MATI (OFF) dan pulsa tersisa sedikit (2.5 kWh). Mari kita pelajari bersama cara mengisinya dan bagaimana aliran energi bekerja!`,
+    [['Siap Laksanakan!', () => {
+      showDialog(
+        '⚡ PROFESOR WATT',
+        'Langkah Pertama:\nPergilah ke Kios PLN (sebelah kanan luar rumah) atau tekan tombol "🏪 Kunjungi Kios Token" di bawah untuk membeli pulsa token listrik.',
+        [['Paham, Saya Berangkat!', showHelp]]
+      );
+    }]]
+  );
+}
+
+function movePlayer(dx, dy) {
+  if (!el('dialog').classList.contains('hidden')) return;
+  state.player.x = Math.max(2, Math.min(94, state.player.x + dx));
+  state.player.y = Math.max(8, Math.min(88, state.player.y + dy));
+
+  let p = el('player');
+  p.style.left = state.player.x + '%';
+  p.style.top = state.player.y + '%';
+  checkInteractions();
+}
+
+function checkInteractions() {
+  let dProf = Math.hypot(state.player.x - 8, state.player.y - 65);
+  let dShop = Math.hypot(state.player.x - 88, state.player.y - 38);
+  let dMeter = Math.hypot(state.player.x - 17, state.player.y - 15);
+
+  let hint = el('hintBox');
+  if (dProf < 10) {
+    hint.textContent = 'Tekan E untuk Berbicara dengan Prof. Watt';
+  } else if (dShop < 12) {
+    hint.textContent = 'Tekan E untuk Membeli Token di Kios PLN';
+  } else if (dMeter < 10) {
+    hint.textContent = 'Tekan E untuk Kelola Sakelar / Isi Token Listrik';
+  } else {
+    hint.textContent = 'Gunakan Panah / WASD untuk Jalan • Klik Objek / Tekan E Dekat Objek';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  let key = e.key.toLowerCase();
+  if (key === 'arrowleft' || key === 'a') movePlayer(-2, 0);
+  if (key === 'arrowright' || key === 'd') movePlayer(2, 0);
+  if (key === 'arrowup' || key === 'w') movePlayer(0, -2);
+  if (key === 'arrowdown' || key === 's') movePlayer(0, 2);
+  if (key === 'e') triggerInteraction();
+});
+
+function triggerInteraction() {
+  let dProf = Math.hypot(state.player.x - 8, state.player.y - 65);
+  let dShop = Math.hypot(state.player.x - 88, state.player.y - 38);
+  let dMeter = Math.hypot(state.player.x - 17, state.player.y - 15);
+
+  if (dProf < 10) {
+    showDialog(
+      '⚡ PROFESOR WATT',
+      'Ingat Rumus Dasar Listrik:\n\nEnergi Listrik (kWh) = Daya Alat (Watt) × Waktu Pakai (Jam) ÷ 1000.\n\nPastikan Sakelar Utama Meteran dalam posisi ON agar arus listrik dapat mengalir ke peralatan rumah!',
+      [['Saya Mengerti', () => {}]]
+    );
+  } else if (dShop < 12) {
+    shop();
+  } else if (dMeter < 10) {
+    meter();
+  } else {
+    toast('Dekati Profesor, Kios Token, atau Meteran Listrik terlebih dahulu.');
+  }
+}
+
+function shop() {
+  showDialog(
+    '🏪 KIOS PLN & TOKEN LISTRIK',
+    'Selamat datang! Silakan pilih nominal pembelian token listrik PLN:\n(Tarif dasar listrik simulasi: Rp1.444,70 / kWh)',
+    [
+      ['Beli Rp20.000 (~13.4 kWh)', () => buyToken(20000)],
+      ['Beli Rp50.000 (~33.5 kWh)', () => buyToken(50000)],
+      ['Beli Rp100.000 (~67.1 kWh)', () => buyToken(100000)]
+    ]
+  );
+}
+
+function buyToken(amount) {
+  if (state.money < amount) {
+    toast('Uang tunai Anda tidak mencukupi!');
+    return;
+  }
+  state.money -= amount;
+  let ppj = amount * 0.03;
+  let netAmount = amount - ppj;
+  let addedKwh = netAmount / 1444.7;
+
+  state.pendingKwh = addedKwh;
+  state.tokenCode = '5821-9940-1283-7710';
+  state.inventory.push(`📱 Struk Token ${rp(amount)}`, `🔢 Kode: ${state.tokenCode}`);
+  state.xp += 60;
+  
+  completeQuest(0);
+  updateHUD();
+
+  showDialog(
+    '🏪 KASIR KIOS PLN',
+    `Pembelian Berhasil!\n\nNominal: ${rp(amount)}\nPotongan Pajak (PPJ 3%): ${rp(ppj)}\nEnergi Diterima: ${addedKwh.toFixed(2)} kWh\n\nNomor Kode Strum Token Anda:\n👉 ${state.tokenCode}`,
+    [['Pergi ke Meteran Rumah', () => {
+      toast('Sekarang dekati Meteran kWh Rumah dan Tekan E!');
+    }]]
+  );
+}
+
+function meter() {
+  let choices = [];
+
+  if (state.tokenCode) {
+    choices.push(['Isi Kode Token (' + state.tokenCode + ')', () => {
+      state.kwh += state.pendingKwh;
+      state.maxKwh = Math.max(state.maxKwh, state.kwh);
+      state.tokenCode = null;
+      state.xp += 90;
+      completeQuest(1);
+      state.inventory.push('⚡ Listrik Rumah Aktif');
+      updateHUD();
+      playSound('ok');
+      toast('BEEP BEEP! Token Berhasil Dimasukkan!');
+      meter();
+    }]);
+  }
+
+  choices.push([state.isMeterOn ? '🔴 Matikan Sakelar Meteran (OFF)' : '🟢 Nyalakan Sakelar Meteran (ON)', () => {
+    state.isMeterOn = !state.isMeterOn;
+    if (state.isMeterOn) {
+      completeQuest(2);
+      toast('Meteran Utama NYALA (ON)! Listrik mengalir.');
+    } else {
+      toast('Meteran Utama MATI (OFF)! Penggunaan energi terhenti.');
+    }
+    updateHUD();
+    meter();
+  }]);
+
+  choices.push(['🔙 Kembali', () => {}]);
+
+  showDialog(
+    '⚡ KONTROL METERAN LISTRIK PLN',
+    `Status Sakelar Meteran: ${state.isMeterOn ? '🟢 ON (AKTIF)' : '🔴 OFF (MATI)'}\nSisa Pulsa Token: ${state.kwh.toFixed(2)} kWh\n\n` +
+    (state.isMeterOn ? 'Listrik dapat mengalir ke alat yang menyala. Token akan berkurang!' : 'Sakelar mati. Tidak ada arus listrik yang mengalir ke rumah.'),
+    choices
+  );
+}
+
+// Interaksi langsung mengeklik objek tertentu di rumah
+function openDeviceControls(deviceId) {
+  let dev = state.devices[deviceId];
+  if (!dev) return;
+
+  let content = `
+    <b>${dev.name}</b><br>
+    <small style="color:#aac0cf">Ruang: ${dev.room} | Daya: ${dev.w} Watt</small><br>
+    <small>Status Peralatan: ${dev.on ? '<b style="color:#5df0aa">NYALA (ON)</b>' : '<span style="color:#ff6b6b">MATI (OFF)</span>'}</small>
+    <hr style="margin:8px 0">
+    <div style="display:flex; gap:6px;">
+      <button style="flex:1" onclick="setDeviceState('${deviceId}', true)">Ubah KE ON</button>
+      <button style="flex:1" class="btn-red" onclick="setDeviceState('${deviceId}', false)">Ubah KE OFF</button>
+    </div>
+    <div style="margin-top:6px">
+      <button class="alt" style="width:100%" onclick="closeDevicePanel()">🔙 Kembali</button>
+    </div>
+  `;
+
+  el('devicePanel').innerHTML = content;
+  el('devicePanel').classList.remove('hidden');
+}
+
+function setDeviceState(deviceId, isOn) {
+  let dev = state.devices[deviceId];
+  dev.on = isOn;
+  if (isOn) {
+    state.xp += 10;
+    completeQuest(3);
+    completeQuest(4);
+  }
+  updateHUD();
+  playSound(isOn ? 'ok' : 'click');
+  openDeviceControls(deviceId);
+}
+
+function closeDevicePanel() {
+  el('devicePanel').classList.add('hidden');
+}
+
+function smartLab() {
+  showDialog(
+    '🤖 SAVER-KIT SMART LAB',
+    'Teknologi SAVER-KIT menggunakan sensor pintar agar penggunaan listrik hemat otomatis:\n\n1. Sensor PIR (Passive Infrared) -> Menyalakan lampu hanya jika ada gerakan manusia.\n2. Sensor LDR (Light Dependent Resistor) -> Menyalakan lampu halaman hanya saat kondisi gelap.',
+    [
+      ['Pasang Sensor PIR', () => {
+        state.pir = true;
+        state.inventory.push('🤖 Sensor PIR (Motion)');
+        toast('Sensor PIR dipasang di Kamar Mandi!');
+        smartLab();
+      }],
+      ['Pasang Sensor LDR', () => {
+        state.ldr = true;
+        state.inventory.push('☀️ Sensor LDR (Cahaya)');
+        toast('Sensor LDR dipasang di Halaman Rumah!');
+        smartLab();
+      }],
+      ['Aktifkan Sistem Hemat Otomatis', () => {
+        if (state.pir && state.ldr) {
+          completeQuest(5);
+          state.eco += 120;
+          state.xp += 180;
+          updateHUD();
+          showDialog(
+            '🤖 ROBOT SAVER',
+            'Sistem Pintar Berhasil Aktif!\nPenggunaan energi listrik rumah Anda turun secara signifikan tanpa pengorbanan kenyamanan.',
+            [['Lanjut Tantangan Terakhir', bossBattle]]
+          );
+        } else {
+          toast('Pasang kedua sensor (PIR dan LDR) terlebih dahulu!');
+        }
+      }],
+      ['🔙 Kembali', () => {}]
+    ]
+  );
+}
+
+function bossBattle() {
+  let monsterHP = 100;
+  let mistakes = [
+    '💡 Lampu Ruang Tamu Menyala di Siang Hari',
+    '❄️ AC Menyala di Ruangan Tanpa Penghuni',
+    '📺 TV Menyala Tanpa Ada yang Menonton',
+    '🔌 Charger Ponsel Dibiarkan Terpasang',
+    '🚿 Lampu Kamar Mandi Lupa Dimatikan'
+  ];
+
+  showDialog(
+    '👾 MONSTER ENERGY WASTER',
+    'HAHAHA! Aku adalah Monster Pemboros Energi! Biarkan semua peralatan elektronik rumahmu menyala terus agar token pulsamu habis dalam sekejap!',
+    [['Lawan Monster!', () => {
+      window.fixEnergyBug = index => {
+        let btns = el('devicePanel').querySelectorAll('.boss-btn');
+        if (!btns[index] || btns[index].disabled) return;
+        btns[index].disabled = true;
+        btns[index].textContent = '✓ BERHASIL DIPERBAIKI';
+        monsterHP -= 20;
+        state.eco += 40;
+        state.xp += 50;
+
+        if (monsterHP <= 0) {
+          completeQuest(6);
+          el('devicePanel').classList.add('hidden');
+          showDialog(
+            '👾 MONSTER ENERGY WASTER',
+            'TIDAAAK! Pengetahuan hemat energimu terlalu kuat! Aku kalah...',
+            [['Lihat Laporan Kelulusan', showReport]]
+          );
+        } else {
+          toast('HP Monster Sisa: ' + monsterHP);
+        }
+      };
+
+      let optionsHtml = mistakes.map((text, i) => 
+        `<button class="boss-btn" style="width:100%;margin-bottom:4px" onclick="fixEnergyBug(${i})">${text} [Matikan]</button>`
+      ).join('');
+
+      el('devicePanel').innerHTML = `<b>⚔ Kalahkan Monster HP: ${monsterHP}</b><br>` + optionsHtml + `<button class="alt" style="width:100%;margin-top:6px" onclick="closeDevicePanel()">🔙 Kembali</button>`;
+      el('devicePanel').classList.remove('hidden');
+    }]]
+  );
+}
+
+function showReport() {
+  completeQuest(7);
+  state.xp += 400;
+  updateHUD();
+
+  showDialog(
+    '🏆 LULUS MASTER TOKEN LISTRIK',
+    `SELAMAT, ${state.name}!\n\n` +
+    `Sisa Token Listrik: ${state.kwh.toFixed(2)} kWh\n` +
+    `Total Poin Pengetahuan: ${state.xp} XP\n` +
+    `Eco Points: ${state.eco}\n\n` +
+    `KESIMPULAN FISIKA & PENDIDIKAN:\n` +
+    `Token listrik cepat habis bukan karena meteran yang rusak, melainkan akibat akumulasi Daya Listrik (Watt) × Waktu Penggunaan (Jam). Dengan mematikan alat yang tidak dipakai, menyalakan meteran saat dibutuhkan saja, serta memanfaatkan IoT & Sensor SAVER-KIT (PIR & LDR), kita bisa menghemat pengeluaran pulsa listrik rumah secara signifikan!`,
+    [
+      ['🧪 Mode Eksperimen Bebas', () => closeDialog()],
+      ['🔄 Mainkan Ulang Game', () => location.reload()]
+    ]
+  );
+}
+
+// SIMULASI BERJALANNYA WAKTU KONSUMSI kWh
+function mainLoop() {
+  // Pengurangan HANYA TERJADI jika Sakelar Meteran ON
+  if (state.isMeterOn && state.kwh > 0) {
+    let activeWatts = Object.values(state.devices).filter(d => d.on).reduce((a, b) => a + b.w, 0);
+    if (activeWatts > 0) {
+      let usedKwh = (activeWatts / 1000 / 3600) * state.speed * 25;
+      state.kwh = Math.max(0, state.kwh - usedKwh);
+      updateHUD();
+    }
+  }
+  requestAnimationFrame(mainLoop);
+}
+
+function showHelp() {
+  showDialog(
+    '🎮 PETUNJUK CARA BERMAIN',
+    '1. Berjalan menggunakan Tombol Keyboard Panah atau W-A-S-D.\n' +
+    '2. Klik langsung pada ikon barang di rumah (💡, 📺, 🍚, ❄️) untuk mengubah status ke ON/OFF dan menekan tombol Kembali.\n' +
+    '3. Pastikan Sakelar Meteran dalam keadaan ON agar pengurangan token listrik dapat berjalan saat alat dinyalakan.\n' +
+    '4. Belilah pulsa token di Kios PLN lalu masukkan kodenya ke meteran.',
+    [['Saya Mengerti', () => {}]]
+  );
+}
+
+// INITIALIZATION
+window.addEventListener('DOMContentLoaded', () => {
+  el('startBtn').addEventListener('click', startGame);
+  el('shopBtn').addEventListener('click', shop);
+  el('meterInteract').addEventListener('click', meter);
+  el('smartBtn').addEventListener('click', smartLab);
+  el('reportBtn').addEventListener('click', showReport);
+
+  el('speedBtn').addEventListener('click', () => {
+    state.speed = state.speed === 1 ? 5 : state.speed === 5 ? 10 : 1;
+    el('speedBtn').textContent = '⏩ Simulasi Waktu: x' + state.speed;
+  });
+
+  // Event listener klik langsung pada icon di rumah
+  ['lamp', 'tv', 'rice', 'ac', 'bathLamp', 'yardLamp'].forEach(id => {
+    let elem = el(id);
+    if(elem) {
+      elem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDeviceControls(id);
+      });
+    }
+  });
+
+  updateHUD();
+  mainLoop();
+});
+</script>
+</body>
+</html>
