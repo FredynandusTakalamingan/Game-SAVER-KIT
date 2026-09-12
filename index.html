@@ -394,7 +394,11 @@ const state = {
   player: { x: 48, y: 75 },
   speed: 1,
   pir: false,
-  ldr: false
+  ldr: false,
+  pirEnabled: false,
+  ldrEnabled: false,
+  bathroomOccupied: false,
+  isDark: false
 };
 
 const quests = [
@@ -557,6 +561,7 @@ function checkInteractions() {
 
 document.addEventListener('keydown', e => {
   let key = e.key.toLowerCase();
+  if (['arrowleft','arrowright','arrowup','arrowdown'].includes(key)) e.preventDefault();
   if (key === 'arrowleft' || key === 'a') movePlayer(-2, 0);
   if (key === 'arrowright' || key === 'd') movePlayer(2, 0);
   if (key === 'arrowup' || key === 'w') movePlayer(0, -2);
@@ -649,6 +654,8 @@ function meter() {
     } else {
       toast('Meteran Utama MATI (OFF)! Penggunaan energi terhenti.');
     }
+    if (!state.isMeterOn) { Object.values(state.devices).forEach(d => d.on = false); }
+    applySmartSystem();
     updateHUD();
     meter();
   }]);
@@ -703,36 +710,67 @@ function closeDevicePanel() {
   el('devicePanel').classList.add('hidden');
 }
 
+function applySmartSystem() {
+  // PIR: lampu kamar mandi hanya menyala saat ada orang jika sensor aktif
+  if (state.pir && state.pirEnabled) {
+    state.devices.bathLamp.on = state.isMeterOn && state.bathroomOccupied;
+  }
+
+  // LDR: lampu halaman hanya menyala saat gelap jika sensor aktif
+  if (state.ldr && state.ldrEnabled) {
+    state.devices.yardLamp.on = state.isMeterOn && state.isDark;
+  }
+}
+
 function smartLab() {
   showDialog(
     '🤖 SAVER-KIT SMART LAB',
-    'Teknologi SAVER-KIT menggunakan sensor pintar agar penggunaan listrik hemat otomatis:\n\n1. Sensor PIR (Passive Infrared) -> Menyalakan lampu hanya jika ada gerakan manusia.\n2. Sensor LDR (Light Dependent Resistor) -> Menyalakan lampu halaman hanya saat kondisi gelap.',
+    'Atur dan uji sensor otomatis SAVER-KIT. PIR mengontrol lampu kamar mandi berdasarkan keberadaan orang, sedangkan LDR mengontrol lampu halaman berdasarkan kondisi terang/gelap.',
     [
       ['Pasang Sensor PIR', () => {
         state.pir = true;
-        state.inventory.push('🤖 Sensor PIR (Motion)');
+        if (!state.inventory.includes('🤖 Sensor PIR (Motion)')) state.inventory.push('🤖 Sensor PIR (Motion)');
         toast('Sensor PIR dipasang di Kamar Mandi!');
+        updateHUD();
         smartLab();
       }],
       ['Pasang Sensor LDR', () => {
         state.ldr = true;
-        state.inventory.push('☀️ Sensor LDR (Cahaya)');
+        if (!state.inventory.includes('☀️ Sensor LDR (Cahaya)')) state.inventory.push('☀️ Sensor LDR (Cahaya)');
         toast('Sensor LDR dipasang di Halaman Rumah!');
+        updateHUD();
         smartLab();
       }],
+      [state.pirEnabled ? '🔴 PIR: ON → Matikan' : '🟢 PIR: OFF → Aktifkan', () => {
+        if (!state.pir) return toast('Pasang Sensor PIR terlebih dahulu!');
+        state.pirEnabled = !state.pirEnabled;
+        applySmartSystem(); updateHUD(); smartLab();
+      }],
+      [state.ldrEnabled ? '🔴 LDR: ON → Matikan' : '🟢 LDR: OFF → Aktifkan', () => {
+        if (!state.ldr) return toast('Pasang Sensor LDR terlebih dahulu!');
+        state.ldrEnabled = !state.ldrEnabled;
+        applySmartSystem(); updateHUD(); smartLab();
+      }],
+      [state.bathroomOccupied ? '🚪 Kamar Mandi: Ada Orang' : '🚪 Kamar Mandi: Kosong', () => {
+        state.bathroomOccupied = !state.bathroomOccupied;
+        applySmartSystem(); updateHUD(); smartLab();
+      }],
+      [state.isDark ? '☀️ Kondisi: Gelap' : '🌤 Kondisi: Terang', () => {
+        state.isDark = !state.isDark;
+        applySmartSystem(); updateHUD(); smartLab();
+      }],
       ['Aktifkan Sistem Hemat Otomatis', () => {
-        if (state.pir && state.ldr) {
+        if (state.pir && state.ldr && state.pirEnabled && state.ldrEnabled) {
           completeQuest(5);
           state.eco += 120;
           state.xp += 180;
+          applySmartSystem();
           updateHUD();
-          showDialog(
-            '🤖 ROBOT SAVER',
-            'Sistem Pintar Berhasil Aktif!\nPenggunaan energi listrik rumah Anda turun secara signifikan tanpa pengorbanan kenyamanan.',
-            [['Lanjut Tantangan Terakhir', bossBattle]]
-          );
+          showDialog('🤖 ROBOT SAVER',
+            'Sistem pintar aktif! Sekarang PIR dan LDR benar-benar mengontrol lampu secara otomatis sesuai kondisi simulasi.',
+            [['Lanjut Tantangan Terakhir', bossBattle]]);
         } else {
-          toast('Pasang kedua sensor (PIR dan LDR) terlebih dahulu!');
+          toast('Pasang dan aktifkan kedua sensor PIR & LDR terlebih dahulu!');
         }
       }],
       ['🔙 Kembali', () => {}]
@@ -814,6 +852,11 @@ function mainLoop() {
     if (activeWatts > 0) {
       let usedKwh = (activeWatts / 1000 / 3600) * state.speed * 25;
       state.kwh = Math.max(0, state.kwh - usedKwh);
+      if (state.kwh <= 0) {
+        state.isMeterOn = false;
+        Object.values(state.devices).forEach(d => d.on = false);
+        toast('⚠ Token habis! Meteran otomatis OFF.');
+      }
       updateHUD();
     }
   }
@@ -834,6 +877,7 @@ function showHelp() {
 // INITIALIZATION
 window.addEventListener('DOMContentLoaded', () => {
   el('startBtn').addEventListener('click', startGame);
+  el('playerInput').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
   el('shopBtn').addEventListener('click', shop);
   el('meterInteract').addEventListener('click', meter);
   el('smartBtn').addEventListener('click', smartLab);
