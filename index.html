@@ -1177,5 +1177,590 @@ window.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 
+
+<style>
+/* =========================================================
+   LAMP CONTROL ADD-ON — TAMBAHAN SAJA
+   Penataan diperbaiki agar panel tidak menutupi area permainan.
+   ========================================================= */
+.lampControlPanel{
+  position:relative;
+  width:100%;
+  margin-top:10px;
+  background:#06101ce8;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--yellow);
+  z-index:1;
+  box-shadow:0 0 12px #0005;
+}
+
+.lampControlPanel h4{
+  margin:0 0 10px;
+  color:var(--yellow);
+  text-align:left;
+}
+
+.lampSummary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  background:#ffffff10;
+  border-radius:8px;
+  padding:8px 10px;
+  margin-bottom:10px;
+  font-weight:bold;
+  line-height:1.4;
+}
+
+.lampRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 90px 52px;
+  gap:7px;
+  align-items:center;
+  margin:6px 0;
+  padding:6px 8px;
+  background:#ffffff08;
+  border-radius:8px;
+  font-size:11px;
+}
+
+.lampRow span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.lampRow input{
+  width:100%;
+  padding:7px 6px;
+  font-size:11px;
+  text-align:center;
+}
+
+.lampRow button{
+  padding:7px 4px;
+  font-size:10px;
+}
+
+.lampHint{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:8px;
+  line-height:1.4;
+}
+
+@media(max-width:800px){
+  .lampSummary{
+    grid-template-columns:1fr;
+  }
+
+  .lampRow{
+    grid-template-columns:minmax(0,1fr) 78px 48px;
+  }
+}
+
+@media(max-width:480px){
+  .lampRow{
+    grid-template-columns:1fr;
+  }
+
+  .lampRow input,
+  .lampRow button{
+    width:100%;
+  }
+}
+</style>
+
+<script>
+/* =========================================================
+   LAMP CONTROL ADD-ON
+   Sintaks game utama tidak diubah.
+   Panel ditempatkan di bawah area permainan agar tidak menutupi
+   rumah, meteran, NPC, player, maupun objek lainnya.
+   ========================================================= */
+(function(){
+  const lampIds = ['lamp','bathLamp','yardLamp'];
+
+  function getLampCount(){
+    return lampIds.reduce((n,id)=>{
+      return n + (state.devices[id] && state.devices[id].on ? 1 : 0);
+    },0);
+  }
+
+  function getLampPower(){
+    return lampIds.reduce((sum,id)=>{
+      return sum + (state.devices[id] ? Number(state.devices[id].w) || 0 : 0);
+    },0);
+  }
+
+  function lampName(id){
+    return {
+      lamp:'💡 Lampu Ruang Tamu',
+      bathLamp:'🚿 Lampu Kamar Mandi',
+      yardLamp:'🌙 Lampu Halaman'
+    }[id] || id;
+  }
+
+  function createLampPanel(){
+    if(document.getElementById('lampControlPanel')) return;
+
+    const controls = document.querySelector('.controls');
+    if(!controls || !controls.parentElement) return;
+
+    const panel = document.createElement('div');
+    panel.id='lampControlPanel';
+    panel.className='lampControlPanel hidden';
+
+    panel.innerHTML = `
+      <h4>💡 KONTROL LAMPU</h4>
+      <div id="lampSummary" class="lampSummary"></div>
+      <div id="lampRows"></div>
+      <div class="lampHint">
+        Atur jumlah lampu dengan menyalakan/mematikan ikon lampu di area rumah.
+        Masukkan daya setiap lampu dalam Watt (W), lalu tekan SET.
+        Nilai daya langsung digunakan dalam perhitungan daya aktif dan konsumsi energi.
+      </div>
+    `;
+
+    /* Panel diletakkan setelah tombol kontrol, bukan di dalam area world. */
+    controls.parentElement.insertBefore(panel, controls.nextSibling);
+
+    renderLampRows();
+    updateLampPanel();
+  }
+
+  function renderLampRows(){
+    const rows=document.getElementById('lampRows');
+    if(!rows) return;
+
+    rows.innerHTML=lampIds.map(id=>{
+      const dev=state.devices[id];
+      return `
+        <div class="lampRow">
+          <span>${lampName(id)}</span>
+          <input id="lampW_${id}" type="number" min="0" step="1"
+                 value="${Number(dev.w)||0}" aria-label="Daya ${lampName(id)}">
+          <button class="alt" onclick="setLampPowerManual('${id}')">SET</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.setLampPowerManual=function(id){
+    const dev=state.devices[id];
+    const input=document.getElementById('lampW_'+id);
+    if(!dev || !input) return;
+
+    const value=Number(input.value);
+    if(!Number.isFinite(value) || value<0){
+      if(typeof playSound==='function') playSound('warn');
+      toast('⚠ Masukkan daya lampu yang valid (0 W atau lebih).');
+      return;
+    }
+
+    dev.w=value;
+    updateLampPanel();
+    updateHUD();
+
+    if(window.RPGAudio && RPGAudio.init) RPGAudio.init();
+    if(window.RPGAudio && RPGAudio.purchase) RPGAudio.purchase();
+
+    toast('💡 Daya '+lampName(id)+' diatur menjadi '+value+' W.');
+  };
+
+  window.toggleLampControlPanel=function(){
+    const panel=document.getElementById('lampControlPanel');
+    if(!panel) return;
+
+    panel.classList.toggle('hidden');
+
+    if(!panel.classList.contains('hidden')){
+      updateLampPanel();
+      panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+  };
+
+  function updateLampPanel(){
+    const summary=document.getElementById('lampSummary');
+    if(!summary) return;
+
+    const count=getLampCount();
+    const power=getLampPower();
+
+    summary.innerHTML =
+      `<div>💡 Lampu Menyala: <b>${count}</b> / ${lampIds.length}</div>`+
+      `<div>⚡ Total Daya Lampu: <b>${power} W</b></div>`;
+
+    lampIds.forEach(id=>{
+      const input=document.getElementById('lampW_'+id);
+      if(input && document.activeElement!==input){
+        input.value=Number(state.devices[id].w)||0;
+      }
+    });
+  }
+
+  function injectLampButton(){
+    const controls=document.querySelector('.controls');
+    if(!controls || document.getElementById('lampControlBtn')) return;
+
+    const btn=document.createElement('button');
+    btn.id='lampControlBtn';
+    btn.className='alt';
+    btn.textContent='💡 Kontrol Lampu';
+    btn.onclick=function(){
+      createLampPanel();
+      toggleLampControlPanel();
+    };
+
+    controls.insertBefore(btn, document.getElementById('speedBtn'));
+  }
+
+  function refresh(){
+    createLampPanel();
+    updateLampPanel();
+  }
+
+  function install(){
+    injectLampButton();
+    refresh();
+
+    /* Refresh tanpa mengganti fungsi game asli. */
+    setInterval(refresh,500);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install);
+  }else{
+    install();
+  }
+
+  window.LampControl={
+    count:getLampCount,
+    power:getLampPower,
+    refresh:updateLampPanel
+  };
+})();
+</script>
+
+
+<style>
+/* =========================================================
+   DENAH RUMAH RPG — LAYOUT VISUAL BARU
+   Hanya override/tambahan CSS; fungsi game tetap dipertahankan.
+   ========================================================= */
+
+/* Area dunia dibuat seperti halaman rumah RPG */
+.world{
+  background:
+    linear-gradient(90deg, transparent 0 8%, #ffffff12 8% 8.4%, transparent 8.4% 91.6%, #ffffff12 91.6% 92%, transparent 92%),
+    linear-gradient(#7bc9ef 0 44%, #65ad50 44% 100%);
+}
+
+/* Jalan utama menuju rumah */
+.world::before{
+  content:"";
+  position:absolute;
+  left:43%;
+  bottom:0;
+  width:15%;
+  height:29%;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #c7b48c 0 18px,
+      #b6a278 18px 20px
+    );
+  border-left:3px solid #9b895f;
+  border-right:3px solid #9b895f;
+  opacity:.95;
+  z-index:1;
+}
+
+/* Taman/rumput dekoratif */
+.world::after{
+  content:"🌳   🌿   🌳        🌼   🌿   🌼        🌳   🌿";
+  position:absolute;
+  left:2%;
+  right:2%;
+  bottom:2%;
+  height:28px;
+  font-size:20px;
+  letter-spacing:4px;
+  white-space:nowrap;
+  overflow:hidden;
+  z-index:2;
+  pointer-events:none;
+}
+
+/* Rumah menjadi denah yang lebih modern dan simetris */
+.house{
+  left:14%;
+  top:19%;
+  width:58%;
+  height:58%;
+  background:#d9c39b;
+  border:8px solid #574735;
+  border-radius:10px;
+  box-shadow:
+    0 12px 0 #3d3025,
+    0 0 0 4px #d6b978,
+    0 18px 30px #0007;
+  z-index:3;
+  overflow:visible;
+}
+
+/* Atap dibuat sebagai header rumah yang lebih rapi */
+.roof{
+  left:-2%;
+  top:-12%;
+  width:104%;
+  height:16%;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      #8f4039 0 14px,
+      #a94d43 14px 28px
+    );
+  clip-path:none;
+  border:5px solid #5b302c;
+  border-radius:10px 10px 3px 3px;
+  box-shadow:0 7px 0 #482723;
+}
+
+/* Setiap ruang menjadi kotak denah dengan garis pembatas jelas */
+.room{
+  background:
+    linear-gradient(#f8ead0,#ead4aa);
+  border:3px solid #76583a;
+  border-radius:5px;
+  padding:8px;
+  font-size:12px;
+  font-weight:800;
+  box-shadow:inset 0 0 0 2px #ffffff55;
+  z-index:4;
+}
+
+/* Susunan 2 x 2 yang proporsional */
+.living{
+  left:2.5%;
+  top:5%;
+  width:47%;
+  height:43%;
+}
+.kitchen{
+  right:2.5%;
+  top:5%;
+  width:47%;
+  height:43%;
+}
+.bed{
+  left:2.5%;
+  bottom:5%;
+  width:47%;
+  height:39%;
+}
+.bath{
+  right:2.5%;
+  bottom:5%;
+  width:47%;
+  height:39%;
+}
+
+/* Koridor tengah */
+.house > .room::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+}
+
+/* Dekorasi furnitur sederhana menggunakan pseudo-element */
+.living::before{
+  content:"🛋️   📺   🪴";
+  display:block;
+  font-size:25px;
+  margin-top:18px;
+  text-align:center;
+  filter:drop-shadow(0 2px 1px #0003);
+}
+
+.kitchen::before{
+  content:"🍚   🍳   🧊";
+  display:block;
+  font-size:24px;
+  margin-top:18px;
+  text-align:center;
+  filter:drop-shadow(0 2px 1px #0003);
+}
+
+.bed::before{
+  content:"🛏️   🪟   🪴";
+  display:block;
+  font-size:24px;
+  margin-top:18px;
+  text-align:center;
+  filter:drop-shadow(0 2px 1px #0003);
+}
+
+.bath::before{
+  content:"🚿   🛁   🚽";
+  display:block;
+  font-size:23px;
+  margin-top:18px;
+  text-align:center;
+  filter:drop-shadow(0 2px 1px #0003);
+}
+
+/* Pintu/akses antar ruang */
+.living::after{
+  content:"🚪";
+  position:absolute;
+  right:-8px;
+  bottom:12%;
+  font-size:18px;
+}
+.kitchen::after{
+  content:"🚪";
+  position:absolute;
+  left:-8px;
+  bottom:12%;
+  font-size:18px;
+}
+.bed::after{
+  content:"🚪";
+  position:absolute;
+  right:-8px;
+  top:12%;
+  font-size:18px;
+}
+.bath::after{
+  content:"🚪";
+  position:absolute;
+  left:-8px;
+  top:12%;
+  font-size:18px;
+}
+
+/* Area meter dibuat seperti panel listrik di sisi rumah */
+.meterBox{
+  left:5%;
+  top:25%;
+  width:120px;
+  z-index:8;
+  background:linear-gradient(145deg,#172c3c,#09151f);
+  border:3px solid #8a9baa;
+  box-shadow:0 0 0 3px #0003, 0 8px 18px #0007;
+}
+
+/* Kios dibuat lebih menonjol sebagai tujuan quest */
+.shopBuilding{
+  right:5%;
+  top:10%;
+  width:24%;
+  height:27%;
+  background:
+    linear-gradient(#465d77,#27384e);
+  border:5px solid #182537;
+  border-radius:12px;
+  box-shadow:
+    0 9px 0 #101a29,
+    0 0 20px #0006;
+  z-index:6;
+  padding:8px;
+}
+
+/* Label NPC lebih jelas */
+.label{
+  background:#071321e8;
+  border:1px solid #ffffff33;
+  box-shadow:0 3px 8px #0006;
+  font-weight:bold;
+}
+
+/* Peralatan listrik diberi area klik yang lebih nyaman */
+.object{
+  z-index:7;
+  transition:transform .15s, filter .15s;
+}
+.object:hover{
+  transform:scale(1.18);
+}
+.object.on{
+  filter:
+    drop-shadow(0 0 8px #ffe87c)
+    drop-shadow(0 0 18px #ffe87c);
+}
+
+/* Player tetap berada paling depan */
+.player{
+  z-index:12;
+}
+
+/* Hint tidak mengganggu objek rumah */
+.hint{
+  z-index:15;
+  max-width:90%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Denah lebih compact pada layar kecil */
+@media(max-width:800px){
+  .house{
+    left:6%;
+    width:64%;
+    top:21%;
+    height:55%;
+  }
+
+  .shopBuilding{
+    right:2%;
+    width:27%;
+  }
+
+  .meterBox{
+    left:2%;
+    width:105px;
+  }
+
+  .room{
+    font-size:9px;
+    padding:5px;
+  }
+
+  .living::before,
+  .kitchen::before,
+  .bed::before,
+  .bath::before{
+    font-size:18px;
+    margin-top:12px;
+  }
+}
+
+@media(max-width:520px){
+  .house{
+    left:4%;
+    width:70%;
+    height:55%;
+  }
+
+  .shopBuilding{
+    width:25%;
+    font-size:9px;
+  }
+
+  .shopSign{
+    font-size:8px;
+  }
+
+  .meterBox{
+    transform:scale(.85);
+    transform-origin:left top;
+  }
+}
+</style>
+
 </body>
 </html>
