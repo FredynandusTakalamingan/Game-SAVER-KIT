@@ -1762,5 +1762,1100 @@ window.addEventListener('DOMContentLoaded', () => {
 }
 </style>
 
+
+<style id="photo-layout-adaptation">
+/* =========================================================
+   PHOTO LAYOUT ADAPTATION — VISUAL ONLY
+   Seluruh HTML/JS asli dipertahankan.
+   Hanya menyesuaikan tampilan denah agar mendekati konsep
+   gambar referensi: top-down pixel RPG, rumah di tengah,
+   4 ruang + koridor, meter di atas, Kios PLN di kanan.
+   ========================================================= */
+
+.world{
+  height:min(680px,72vh);
+  min-height:520px;
+  border-radius:12px;
+  overflow:hidden;
+  border:4px solid #263e70;
+  background:
+    radial-gradient(circle at 50% 25%, #233b72 0 2px, transparent 3px),
+    linear-gradient(180deg,#11152d 0 10%,#17213f 10% 100%);
+  box-shadow:
+    inset 0 0 0 3px #0a1025,
+    inset 0 0 35px #000b,
+    0 12px 28px #0008;
+}
+
+/* Pola lantai/halaman bergaya pixel-art */
+.world::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,#ffffff08 1px,transparent 1px),
+    linear-gradient(#ffffff08 1px,transparent 1px);
+  background-size:26px 26px;
+  opacity:.42;
+}
+
+/* Dekorasi cahaya pixel di sekitar area permainan */
+.world::after{
+  content:"✦     ✧        ⚡       ✦          ✧       ✦";
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  color:#61f6c2;
+  font-size:16px;
+  letter-spacing:12px;
+  text-align:center;
+  opacity:.55;
+  pointer-events:none;
+}
+
+/* Rumah menjadi fokus utama seperti gambar referensi */
+.house{
+  left:14%;
+  top:18%;
+  width:60%;
+  height:67%;
+  background:
+    linear-gradient(90deg,#314b80 0 8%,transparent 8% 92%,#314b80 92%),
+    linear-gradient(#314b80 0 7%,transparent 7% 93%,#314b80 93%),
+    #384b7b;
+  border:7px solid #263963;
+  border-radius:4px;
+  box-shadow:
+    0 0 0 3px #10182e,
+    0 12px 0 #0b1124,
+    0 0 28px #0009;
+  z-index:2;
+}
+
+/* Konsep foto adalah denah top-down, bukan atap rumah */
+.roof{
+  display:none;
+}
+
+/* Koridor tengah */
+.house::before{
+  content:"";
+  position:absolute;
+  left:43%;
+  top:3%;
+  width:14%;
+  height:94%;
+  background:
+    linear-gradient(90deg,#d45c55 0 45%,#b64b52 45% 55%,#d45c55 55%),
+    repeating-linear-gradient(0deg,#d85f58 0 48px,#b74d53 48px 52px);
+  border-left:3px solid #813f4b;
+  border-right:3px solid #813f4b;
+  box-shadow:inset 0 0 0 2px #f58b72aa;
+  z-index:0;
+}
+
+/* Ruang dibuat seperti petak denah pada gambar */
+.room{
+  z-index:1;
+  border:4px solid #29446f;
+  border-radius:3px;
+  color:#fff;
+  padding:8px;
+  font-size:13px;
+  font-weight:900;
+  text-shadow:2px 2px 0 #17203b;
+  box-shadow:
+    inset 0 0 0 2px #ffffff25,
+    inset 0 -7px 0 #0002;
+}
+
+/* Susunan mengikuti foto:
+   kiri atas = ruang tamu
+   kanan atas = kamar
+   kiri bawah = dapur
+   kanan bawah = kamar mandi */
+.living{
+  left:3%;
+  top:8%;
+  width:39%;
+  height:43%;
+  background:
+    radial-gradient(circle at 25% 65%,#4c9c68 0 18px,transparent 19px),
+    linear-gradient(145deg,#408b68,#28624e);
+}
+
+.bed{
+  right:3%;
+  left:auto;
+  top:8%;
+  width:39%;
+  height:43%;
+  bottom:auto;
+  background:
+    linear-gradient(145deg,#8cc05e,#63a64f);
+}
+
+.kitchen{
+  left:3%;
+  right:auto;
+  bottom:5%;
+  top:auto;
+  width:39%;
+  height:37%;
+  background:
+    linear-gradient(145deg,#63b5d4,#438fb6);
+}
+
+.bath{
+  right:3%;
+  bottom:5%;
+  width:39%;
+  height:37%;
+  background:
+    linear-gradient(145deg,#9bd8ee,#69b8d5);
+}
+
+/* Label ruang lebih menyerupai papan nama pixel */
+.living,
+.bed,
+.kitchen,
+.bath{
+  letter-spacing:.3px;
+}
+
+/* Furnitur visual: tetap pseudo-element, tidak mengubah isi HTML */
+.living::before{
+  content:"📺      🛋️      🪴";
+  display:block;
+  font-size:28px;
+  margin-top:24px;
+  text-align:center;
+  filter:drop-shadow(2px 3px 0 #17203b);
+}
+
+.bed::before{
+  content:"🛏️       🪟       🪴";
+  display:block;
+  font-size:27px;
+  margin-top:24px;
+  text-align:center;
+  filter:drop-shadow(2px 3px 0 #17203b);
+}
+
+.kitchen::before{
+  content:"🍚      🍳      🔥";
+  display:block;
+  font-size:27px;
+  margin-top:20px;
+  text-align:center;
+  filter:drop-shadow(2px 3px 0 #17203b);
+}
+
+.bath::before{
+  content:"🚿      🛁      🚽";
+  display:block;
+  font-size:25px;
+  margin-top:18px;
+  text-align:center;
+  filter:drop-shadow(2px 3px 0 #17203b);
+}
+
+/* Pintu mengarah ke koridor */
+.living::after{
+  content:"🚪";
+  position:absolute;
+  right:-13px;
+  bottom:15%;
+  font-size:20px;
+  z-index:3;
+}
+
+.bed::after{
+  content:"🚪";
+  position:absolute;
+  left:-13px;
+  bottom:15%;
+  font-size:20px;
+  z-index:3;
+}
+
+.kitchen::after{
+  content:"🚪";
+  position:absolute;
+  right:-13px;
+  top:15%;
+  font-size:20px;
+  z-index:3;
+}
+
+.bath::after{
+  content:"🚪";
+  position:absolute;
+  left:-13px;
+  top:15%;
+  font-size:20px;
+  z-index:3;
+}
+
+/* Meter seperti panel meter digital di bagian atas rumah */
+.meterBox{
+  left:42%;
+  top:3%;
+  width:125px;
+  padding:8px;
+  background:linear-gradient(145deg,#dbe4e9,#8799aa);
+  color:#071321;
+  border:4px solid #26344e;
+  border-radius:4px;
+  box-shadow:
+    0 0 0 2px #111a31,
+    0 7px 0 #11182c,
+    0 0 20px #55f5bd55;
+  z-index:8;
+}
+
+.meterBox b{
+  display:inline-block;
+  background:#9ee36b;
+  color:#17311f;
+  border:2px solid #477b49;
+  padding:3px 7px;
+  margin-top:3px;
+  font-size:14px;
+}
+
+.meterBar{
+  background:#172238;
+}
+
+.meterStatus{
+  color:#172238;
+  font-size:10px;
+}
+
+/* Kios PLN dibuat seperti bangunan terpisah di sisi kanan */
+.shopBuilding{
+  right:3%;
+  top:39%;
+  width:21%;
+  height:29%;
+  background:
+    linear-gradient(180deg,#c94d42 0 18%,#a83f3e 18% 30%,#37557b 30% 100%);
+  border:5px solid #1c2947;
+  border-radius:4px;
+  box-shadow:
+    0 9px 0 #0b1124,
+    0 0 0 2px #10182e,
+    0 0 22px #ffbe4a33;
+  z-index:7;
+  padding:8px 5px;
+}
+
+.shopSign{
+  background:#4ab3d5;
+  color:#06101c;
+  border:3px solid #1c3157;
+  border-radius:2px;
+  font-size:12px;
+  padding:5px 3px;
+  text-shadow:none;
+}
+
+/* NPC dan player lebih tegas seperti sprite game */
+.player,
+.npc{
+  filter:
+    drop-shadow(0 5px 0 #11182b)
+    drop-shadow(0 0 8px #64f5c1aa);
+}
+
+.player{
+  z-index:12;
+}
+
+.npcProf,
+.npcSeller{
+  z-index:11;
+}
+
+.label{
+  background:#11182beF;
+  border:2px solid #5de8ba;
+  border-radius:3px;
+  padding:4px 7px;
+  font-size:10px;
+  font-weight:900;
+  box-shadow:3px 3px 0 #050914;
+}
+
+/* Objek listrik tampil seperti item interaktif */
+.object{
+  z-index:10;
+  text-shadow:2px 3px 0 #15203a;
+}
+
+.object:hover{
+  transform:scale(1.2);
+  filter:drop-shadow(0 0 12px #ffe87c);
+}
+
+.object.on{
+  filter:
+    drop-shadow(0 0 7px #ffe87c)
+    drop-shadow(0 0 18px #fff27c);
+}
+
+/* Hint dibuat seperti dialog HUD pada game */
+.hint{
+  bottom:8px;
+  background:#11182beF;
+  border:3px solid #42e6d1;
+  border-radius:4px;
+  box-shadow:0 5px 0 #050914;
+  font-weight:800;
+  z-index:20;
+}
+
+/* Panel kontrol tetap di bawah world */
+.lampControlPanel{
+  border:2px solid #ffd166;
+  background:linear-gradient(145deg,#111c35,#07101f);
+}
+
+/* Efek pixel pada card game */
+.gameLayout > aside.card,
+.gameLayout > main.card{
+  border:2px solid #29466f;
+  box-shadow:0 8px 20px #0006;
+}
+
+/* Responsif */
+@media(max-width:800px){
+  .world{
+    height:600px;
+    min-height:500px;
+  }
+
+  .house{
+    left:7%;
+    width:68%;
+    top:20%;
+    height:65%;
+  }
+
+  .shopBuilding{
+    right:2%;
+    width:24%;
+    top:40%;
+  }
+
+  .meterBox{
+    left:40%;
+    top:4%;
+    transform:scale(.9);
+    transform-origin:left top;
+  }
+
+  .room{
+    font-size:9px;
+    border-width:3px;
+  }
+
+  .living::before,
+  .bed::before,
+  .kitchen::before,
+  .bath::before{
+    font-size:18px;
+    margin-top:14px;
+  }
+}
+
+@media(max-width:520px){
+  .world{
+    min-height:470px;
+    height:540px;
+  }
+
+  .house{
+    left:4%;
+    width:72%;
+    top:21%;
+    height:62%;
+  }
+
+  .shopBuilding{
+    width:23%;
+    height:26%;
+    font-size:8px;
+  }
+
+  .shopSign{
+    font-size:7px;
+  }
+
+  .meterBox{
+    left:39%;
+    width:105px;
+    transform:scale(.78);
+  }
+
+  .room{
+    padding:4px;
+    font-size:8px;
+  }
+
+  .living::before,
+  .bed::before,
+  .kitchen::before,
+  .bath::before{
+    font-size:15px;
+    margin-top:12px;
+  }
+}
+</style>
+
+
+<style id="token-quest-revision-v2">
+/* =========================================================
+   TOKEN QUEST RPG — REVISION V2
+   Visual/layout + menu peralatan + ekonomi permainan.
+   Kode asli dipertahankan; fitur baru ditambahkan di bawah.
+   ========================================================= */
+
+/* ---------- LAYOUT DENAH LEBIH RAPI ---------- */
+.gameLayout{
+  grid-template-columns:230px minmax(0,1fr);
+  align-items:start;
+}
+
+.gameLayout > aside.card{
+  position:sticky;
+  top:72px;
+  max-height:calc(100vh - 90px);
+  overflow:auto;
+}
+
+.gameLayout > main.card{
+  min-width:0;
+  overflow:visible;
+}
+
+.world{
+  height:min(650px,70vh);
+  min-height:540px;
+  border-radius:8px;
+  background:
+    linear-gradient(90deg,#151d38 1px,transparent 1px),
+    linear-gradient(#151d38 1px,transparent 1px),
+    linear-gradient(180deg,#0d1730,#182445);
+  background-size:24px 24px;
+  box-shadow:inset 0 0 35px #000a,0 10px 30px #0008;
+}
+
+/* Rumah lebih simetris dan terpusat */
+.house{
+  left:13%;
+  top:17%;
+  width:62%;
+  height:69%;
+  border-radius:5px;
+  border-width:7px;
+  box-shadow:0 0 0 3px #11182e,0 12px 0 #080e20,0 0 28px #0008;
+}
+
+/* Koridor tengah dibuat jelas */
+.house::before{
+  left:43%;
+  width:14%;
+  top:2%;
+  height:96%;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #d9655b 0 40px,
+      #b94d52 40px 43px
+    );
+}
+
+/* Ruangan */
+.room{
+  border-width:3px;
+  padding:7px;
+  font-size:12px;
+  border-radius:3px;
+  box-shadow:inset 0 0 0 2px #ffffff18,inset 0 -6px 0 #0002;
+}
+
+.living{
+  left:3%;
+  top:7%;
+  width:39%;
+  height:43%;
+}
+
+.bed{
+  right:3%;
+  top:7%;
+  width:39%;
+  height:43%;
+}
+
+.kitchen{
+  left:3%;
+  bottom:5%;
+  width:39%;
+  height:38%;
+}
+
+.bath{
+  right:3%;
+  bottom:5%;
+  width:39%;
+  height:38%;
+}
+
+/* ---------- POSISI IKON PERALATAN ---------- */
+/* Posisi dibuat mengikuti ruang masing-masing */
+#lamp{
+  left:27% !important;
+  top:36% !important;
+}
+
+#tv{
+  left:20% !important;
+  top:45% !important;
+}
+
+#rice{
+  left:27% !important;
+  top:67% !important;
+}
+
+#ac{
+  left:63% !important;
+  top:35% !important;
+}
+
+#bathLamp{
+  left:63% !important;
+  top:66% !important;
+}
+
+#yardLamp{
+  left:82% !important;
+  top:74% !important;
+}
+
+/* Ikon alat lebih terlihat seperti perangkat interaktif */
+.object{
+  width:46px;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+  z-index:14;
+  border-radius:8px;
+  transition:.18s ease;
+}
+
+.object::after{
+  content:"";
+  position:absolute;
+  inset:-4px;
+  border:2px solid #ffffff20;
+  border-radius:8px;
+  pointer-events:none;
+}
+
+.object:hover{
+  transform:scale(1.13);
+  background:#ffffff12;
+}
+
+.object.on{
+  background:#fff3;
+  box-shadow:0 0 0 2px #ffe87c55,0 0 22px #ffe87caa;
+}
+
+/* ---------- MENU KONTROL PERALATAN ---------- */
+.deviceControlMenu{
+  margin-top:12px;
+  padding:14px;
+  border:2px solid #42e6d1;
+  border-radius:14px;
+  background:linear-gradient(145deg,#0d1e36,#07111f);
+  box-shadow:0 8px 22px #0007;
+}
+
+.deviceControlHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.deviceControlHeader h3{
+  margin:0;
+  color:#5df0aa;
+  font-size:15px;
+}
+
+.deviceTotal{
+  padding:5px 9px;
+  border-radius:8px;
+  background:#ffffff10;
+  color:#ffd166;
+  font-size:11px;
+  font-weight:900;
+}
+
+.deviceGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+
+.deviceCard{
+  min-width:0;
+  padding:10px;
+  border:1px solid #ffffff20;
+  border-radius:11px;
+  background:#ffffff08;
+  transition:.18s;
+}
+
+.deviceCard.active{
+  border-color:#5df0aa;
+  background:#5df0aa10;
+  box-shadow:0 0 14px #5df0aa22;
+}
+
+.deviceCard .deviceIcon{
+  font-size:25px;
+  float:left;
+  margin-right:7px;
+}
+
+.deviceCard .deviceName{
+  font-weight:900;
+  font-size:11px;
+  color:#fff;
+  line-height:1.25;
+}
+
+.deviceCard .deviceInfo{
+  clear:both;
+  color:#aac0cf;
+  font-size:9px;
+  margin-top:7px;
+  line-height:1.45;
+}
+
+.deviceCard .deviceState{
+  margin-top:7px;
+  font-size:10px;
+  font-weight:900;
+}
+
+.deviceCard .deviceState.on{
+  color:#5df0aa;
+}
+
+.deviceCard .deviceState.off{
+  color:#ff6b6b;
+}
+
+.deviceToggle{
+  width:100%;
+  margin-top:8px;
+  padding:7px 5px;
+  border-radius:7px;
+  font-size:10px;
+}
+
+.deviceToggle.offBtn{
+  background:#ff6b6b;
+  color:#fff;
+}
+
+.deviceToggle.onBtn{
+  background:#5df0aa;
+  color:#052016;
+}
+
+.deviceCost{
+  margin-top:5px;
+  color:#ffd166;
+  font-size:9px;
+}
+
+/* ---------- MENU PEMBELIAN TOKEN ---------- */
+.tokenQuickMenu{
+  margin-top:12px;
+  padding:12px;
+  border:2px solid #ffd166;
+  border-radius:14px;
+  background:linear-gradient(145deg,#201b20,#0c1526);
+}
+
+.tokenQuickMenu h3{
+  margin:0 0 8px;
+  color:#ffd166;
+  font-size:14px;
+}
+
+.tokenMoney{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:7px 9px;
+  background:#ffffff08;
+  border-radius:8px;
+  font-size:11px;
+  margin-bottom:8px;
+}
+
+.tokenMoney b{
+  color:#5df0aa;
+}
+
+.tokenBuyGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+.tokenBuyBtn{
+  padding:8px 5px;
+  font-size:10px;
+  background:#ffd166;
+  color:#211800;
+}
+
+.tokenBuyBtn:hover{
+  filter:brightness(1.15);
+}
+
+/* ---------- STATUS PERALATAN DI DALAM DENAH ---------- */
+.deviceRoomBadge{
+  position:absolute;
+  transform:translate(-50%,0);
+  z-index:15;
+  margin-top:42px;
+  pointer-events:none;
+  padding:2px 5px;
+  border-radius:4px;
+  background:#080e20dd;
+  border:1px solid #ffffff25;
+  color:#dce9f2;
+  font-size:8px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:900px){
+  .gameLayout{
+    grid-template-columns:1fr;
+  }
+
+  .gameLayout > aside.card{
+    position:relative;
+    top:auto;
+    max-height:none;
+  }
+
+  .deviceGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:600px){
+  .world{
+    min-height:470px;
+    height:540px;
+  }
+
+  .house{
+    left:5%;
+    width:72%;
+    top:20%;
+    height:65%;
+  }
+
+  .deviceGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .tokenBuyGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .deviceCard{
+    padding:8px;
+  }
+
+  .deviceCard .deviceIcon{
+    font-size:21px;
+  }
+}
+
+@media(max-width:420px){
+  .deviceGrid{
+    grid-template-columns:1fr;
+  }
+
+  .tokenBuyGrid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
+
+<script>
+/* =========================================================
+   GAMEPLAY ADD-ON V2
+   1. Modal uang awal diperbesar agar pemain dapat membeli
+      beberapa token.
+   2. Menu kontrol semua peralatan.
+   3. Setiap alat memiliki tombol ON/OFF.
+   4. Daya aktif dan konsumsi tetap mengikuti state.devices.
+   5. Menu token cepat menggunakan buyToken() asli.
+   ========================================================= */
+(function(){
+
+  const STARTING_MONEY = 1000000;
+  const TARIFF = 1444.7;
+
+  function moneyFormat(n){
+    return 'Rp' + Math.round(n).toLocaleString('id-ID');
+  }
+
+  function getActivePower(){
+    if(!state.isMeterOn) return 0;
+    return Object.values(state.devices)
+      .filter(d => d.on)
+      .reduce((sum,d) => sum + (Number(d.w) || 0),0);
+  }
+
+  function getHourlyCost(w){
+    return (Number(w) || 0) / 1000 * TARIFF;
+  }
+
+  function deviceIcon(id){
+    return {
+      lamp:'💡',
+      tv:'📺',
+      rice:'🍚',
+      ac:'❄️',
+      bathLamp:'🚿',
+      yardLamp:'🌙'
+    }[id] || '🔌';
+  }
+
+  function createDeviceMenu(){
+    if(document.getElementById('deviceControlMenu')) return;
+
+    const controls = document.querySelector('.controls');
+    if(!controls || !controls.parentElement) return;
+
+    const menu = document.createElement('section');
+    menu.id = 'deviceControlMenu';
+    menu.className = 'deviceControlMenu';
+
+    menu.innerHTML = `
+      <div class="deviceControlHeader">
+        <h3>⚡ PANEL KONTROL PERALATAN</h3>
+        <div id="deviceTotal" class="deviceTotal">0 W • 0 alat</div>
+      </div>
+      <div id="deviceGrid" class="deviceGrid"></div>
+    `;
+
+    controls.parentElement.insertBefore(menu, controls);
+
+    renderDeviceCards();
+    updateDeviceMenu();
+  }
+
+  function renderDeviceCards(){
+    const grid = document.getElementById('deviceGrid');
+    if(!grid) return;
+
+    grid.innerHTML = Object.keys(state.devices).map(id => {
+      const d = state.devices[id];
+      return `
+        <div id="deviceCard_${id}" class="deviceCard">
+          <span class="deviceIcon">${deviceIcon(id)}</span>
+          <div class="deviceName">${d.name}</div>
+          <div class="deviceInfo">
+            📍 ${d.room}<br>
+            ⚡ ${d.w} Watt
+          </div>
+          <div id="deviceState_${id}" class="deviceState off">● OFF</div>
+          <div class="deviceCost">
+            ≈ ${moneyFormat(getHourlyCost(d.w))}/jam
+          </div>
+          <button id="deviceBtn_${id}" class="deviceToggle offBtn">
+            🟢 NYALAKAN
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    Object.keys(state.devices).forEach(id => {
+      const btn = document.getElementById('deviceBtn_' + id);
+      if(btn){
+        btn.onclick = function(){
+          toggleDeviceFromMenu(id);
+        };
+      }
+    });
+  }
+
+  function toggleDeviceFromMenu(id){
+    const d = state.devices[id];
+    if(!d) return;
+
+    if(!state.isMeterOn && !d.on){
+      toast('⚠ Nyalakan Sakelar Meteran terlebih dahulu.');
+      playSound('warn');
+      meter();
+      return;
+    }
+
+    d.on = !d.on;
+
+    if(d.on){
+      state.xp += 10;
+      completeQuest(3);
+      completeQuest(4);
+      toast('⚡ ' + d.name + ' → NYALA (ON)');
+      playSound('ok');
+    }else{
+      toast('🔴 ' + d.name + ' → MATI (OFF)');
+      playSound('click');
+    }
+
+    applySmartSystem();
+    updateHUD();
+    updateDeviceMenu();
+  }
+
+  function updateDeviceMenu(){
+    const total = document.getElementById('deviceTotal');
+    if(total){
+      const active = getActivePower();
+      const count = state.isMeterOn
+        ? Object.values(state.devices).filter(d => d.on).length
+        : 0;
+      total.textContent = active + ' W • ' + count + ' alat';
+    }
+
+    Object.keys(state.devices).forEach(id => {
+      const d = state.devices[id];
+      const card = document.getElementById('deviceCard_' + id);
+      const stateEl = document.getElementById('deviceState_' + id);
+      const btn = document.getElementById('deviceBtn_' + id);
+
+      if(!card || !stateEl || !btn) return;
+
+      const active = d.on && state.isMeterOn;
+      card.classList.toggle('active', active);
+
+      if(active){
+        stateEl.textContent = '● ON • AKTIF';
+        stateEl.className = 'deviceState on';
+        btn.textContent = '🔴 MATIKAN';
+        btn.className = 'deviceToggle offBtn';
+      }else{
+        stateEl.textContent = d.on && !state.isMeterOn
+          ? '● ON • METER OFF'
+          : '● OFF';
+        stateEl.className = 'deviceState off';
+        btn.textContent = '🟢 NYALAKAN';
+        btn.className = 'deviceToggle onBtn';
+      }
+    });
+  }
+
+  function createTokenMenu(){
+    if(document.getElementById('tokenQuickMenu')) return;
+
+    const controls = document.querySelector('.controls');
+    if(!controls || !controls.parentElement) return;
+
+    const menu = document.createElement('section');
+    menu.id = 'tokenQuickMenu';
+    menu.className = 'tokenQuickMenu';
+
+    menu.innerHTML = `
+      <h3>💳 KIOS TOKEN CEPAT</h3>
+      <div class="tokenMoney">
+        <span>Saldo uang</span>
+        <b id="tokenMoneyValue">${moneyFormat(state.money)}</b>
+      </div>
+      <div class="tokenBuyGrid">
+        <button class="tokenBuyBtn" onclick="buyToken(20000)">+ Rp20 Ribu</button>
+        <button class="tokenBuyBtn" onclick="buyToken(50000)">+ Rp50 Ribu</button>
+        <button class="tokenBuyBtn" onclick="buyToken(100000)">+ Rp100 Ribu</button>
+        <button class="tokenBuyBtn" onclick="buyToken(250000)">+ Rp250 Ribu</button>
+        <button class="tokenBuyBtn" onclick="buyToken(500000)">+ Rp500 Ribu</button>
+        <button class="tokenBuyBtn" onclick="buyToken(1000000)">+ Rp1 Juta</button>
+      </div>
+    `;
+
+    controls.parentElement.insertBefore(menu, controls.nextSibling);
+  }
+
+  function updateTokenMenu(){
+    const money = document.getElementById('tokenMoneyValue');
+    if(money) money.textContent = moneyFormat(state.money);
+  }
+
+  /* Bungkus updateHUD asli agar menu baru selalu sinkron. */
+  const originalUpdateHUD = window.updateHUD;
+  window.updateHUD = function(){
+    originalUpdateHUD();
+    updateDeviceMenu();
+    updateTokenMenu();
+  };
+
+  window.addEventListener('DOMContentLoaded', function(){
+
+    /* Modal awal dibuat lebih besar agar pembelian token lebih leluasa. */
+    state.money = STARTING_MONEY;
+
+    createDeviceMenu();
+    createTokenMenu();
+
+    updateHUD();
+    updateDeviceMenu();
+    updateTokenMenu();
+
+    /* Tambahkan badge status singkat pada ikon perangkat. */
+    Object.keys(state.devices).forEach(id => {
+      const icon = document.getElementById(id);
+      if(!icon || icon.querySelector('.deviceRoomBadge')) return;
+
+      const badge = document.createElement('span');
+      badge.className = 'deviceRoomBadge';
+      badge.textContent = state.devices[id].w + 'W';
+      icon.appendChild(badge);
+    });
+
+    /* Sinkronisasi visual setiap beberapa saat. */
+    setInterval(function(){
+      updateDeviceMenu();
+      updateTokenMenu();
+    }, 500);
+  });
+
+})();
+</script>
+
 </body>
 </html>
