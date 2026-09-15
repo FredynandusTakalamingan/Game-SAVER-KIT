@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -903,5 +904,278 @@ window.addEventListener('DOMContentLoaded', () => {
   mainLoop();
 });
 </script>
+
+<script>
+/* =========================================================
+   AUDIO RPG ADD-ON — TAMBAHAN SAJA, LOGIKA GAME ASLI DIPERTAHANKAN
+   Audio dibuat dengan Web Audio API sehingga tidak membutuhkan
+   file MP3/asset eksternal.
+   ========================================================= */
+(function () {
+  let rpgAudioCtx = null;
+  let rpgMaster = null;
+  let rpgMusicTimer = null;
+  let rpgMusicStarted = false;
+  let lastSpeaker = '';
+  let lastDialogText = '';
+  let lastToast = '';
+
+  function initRPGAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+
+      if (!rpgAudioCtx) {
+        rpgAudioCtx = new AC();
+        rpgMaster = rpgAudioCtx.createGain();
+        rpgMaster.gain.value = 0.12;
+        rpgMaster.connect(rpgAudioCtx.destination);
+      }
+
+      if (rpgAudioCtx.state === 'suspended') rpgAudioCtx.resume();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function rpgTone(freq, duration, type, volume, delay) {
+    if (!initRPGAudio()) return;
+    const ctx = rpgAudioCtx;
+    const start = ctx.currentTime + (delay || 0);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type || 'square';
+    osc.frequency.setValueAtTime(freq, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume || 0.12, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    osc.connect(gain);
+    gain.connect(rpgMaster);
+    osc.start(start);
+    osc.stop(start + duration + 0.03);
+  }
+
+  function rpgSweep(startFreq, endFreq, duration, type, volume) {
+    if (!initRPGAudio()) return;
+    const ctx = rpgAudioCtx;
+    const start = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(startFreq, start);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, start + duration);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume || 0.1, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    osc.connect(gain);
+    gain.connect(rpgMaster);
+    osc.start(start);
+    osc.stop(start + duration + 0.03);
+  }
+
+  function professorEncounterSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(392, .12, 'triangle', .16, 0);
+    rpgTone(523.25, .14, 'triangle', .17, .11);
+    rpgTone(659.25, .20, 'triangle', .18, .23);
+    rpgTone(783.99, .28, 'sine', .13, .40);
+  }
+
+  function shopOpenSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(523.25, .10, 'square', .13, 0);
+    rpgTone(659.25, .10, 'square', .13, .10);
+    rpgTone(783.99, .16, 'square', .15, .20);
+    rpgTone(1046.50, .22, 'triangle', .12, .34);
+  }
+
+  function purchaseSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(659.25, .08, 'square', .13, 0);
+    rpgTone(783.99, .08, 'square', .13, .09);
+    rpgTone(987.77, .12, 'triangle', .15, .18);
+    rpgTone(1318.51, .25, 'triangle', .13, .31);
+  }
+
+  function tokenInsertSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(220, .08, 'square', .10, 0);
+    rpgTone(330, .08, 'square', .11, .10);
+    rpgTone(440, .08, 'square', .12, .20);
+    rpgTone(660, .12, 'square', .13, .30);
+    rpgTone(880, .16, 'triangle', .16, .43);
+    rpgTone(1320, .30, 'sine', .11, .59);
+  }
+
+  function questCompleteSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(523.25, .08, 'triangle', .12, 0);
+    rpgTone(659.25, .08, 'triangle', .12, .09);
+    rpgTone(783.99, .08, 'triangle', .13, .18);
+    rpgTone(1046.50, .22, 'triangle', .15, .27);
+  }
+
+  function errorSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(180, .12, 'sawtooth', .09, 0);
+    rpgTone(140, .18, 'sawtooth', .08, .12);
+  }
+
+  function dialogTypingSound() {
+    if (!initRPGAudio()) return;
+    rpgTone(700, .025, 'square', .018, 0);
+  }
+
+  /* Musik latar RPG ringan: loop arpeggio sangat lembut */
+  function startRPGMusic() {
+    if (rpgMusicStarted || !initRPGAudio()) return;
+    rpgMusicStarted = true;
+
+    const notes = [261.63, 329.63, 392.00, 493.88, 392.00, 329.63];
+    let i = 0;
+
+    function step() {
+      if (!rpgMusicStarted) return;
+      rpgTone(notes[i % notes.length], .42, 'sine', .018, 0);
+      i++;
+      rpgMusicTimer = setTimeout(step, 650);
+    }
+    step();
+  }
+
+  function stopRPGMusic() {
+    rpgMusicStarted = false;
+    if (rpgMusicTimer) clearTimeout(rpgMusicTimer);
+    rpgMusicTimer = null;
+  }
+
+  /* Mendeteksi dialog yang memang sudah dibuat oleh game asli.
+     Tidak mengubah isi dialog maupun alur permainan. */
+  function inspectDialog() {
+    const dialog = document.getElementById('dialog');
+    const speaker = document.getElementById('speaker');
+    const text = document.getElementById('dialogText');
+    if (!dialog || !speaker || !text) return;
+    if (dialog.classList.contains('hidden')) return;
+
+    const sp = speaker.textContent.trim();
+    const tx = text.textContent.trim();
+
+    if (sp === lastSpeaker && tx === lastDialogText) return;
+    lastSpeaker = sp;
+    lastDialogText = tx;
+
+    if (sp.includes('PROFESOR WATT')) {
+      professorEncounterSound();
+    } else if (sp.includes('KIOS PLN') || sp.includes('KASIR KIOS PLN')) {
+      if (sp.includes('KASIR')) purchaseSound();
+      else shopOpenSound();
+    } else if (sp.includes('KONTROL METERAN')) {
+      if (tx.includes('Token Berhasil')) tokenInsertSound();
+      else rpgTone(330, .12, 'triangle', .10, 0);
+    } else if (sp.includes('ROBOT SAVER')) {
+      questCompleteSound();
+    } else if (sp.includes('MONSTER ENERGY WASTER')) {
+      rpgTone(110, .20, 'sawtooth', .08, 0);
+      rpgTone(82, .24, 'sawtooth', .07, .18);
+    } else {
+      dialogTypingSound();
+    }
+  }
+
+  function inspectToast() {
+    const toast = document.getElementById('toast');
+    if (!toast || !toast.classList.contains('show')) return;
+    const tx = toast.textContent.trim();
+    if (!tx || tx === lastToast) return;
+    lastToast = tx;
+
+    if (tx.includes('Misi Selesai')) {
+      questCompleteSound();
+    } else if (
+      tx.includes('Token Berhasil') ||
+      tx.includes('Pembelian Berhasil') ||
+      tx.includes('NYALA')
+    ) {
+      purchaseSound();
+    } else if (
+      tx.includes('tidak mencukupi') ||
+      tx.includes('Dekati') ||
+      tx.includes('terlebih dahulu')
+    ) {
+      errorSound();
+    }
+  }
+
+  function installRPGAudio() {
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        initRPGAudio();
+        startRPGMusic();
+        setTimeout(professorEncounterSound, 350);
+      });
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key.toLowerCase() === 'e') {
+        initRPGAudio();
+      }
+    }, { passive: true });
+
+    document.addEventListener('click', function () {
+      initRPGAudio();
+    }, { passive: true });
+
+    const dialog = document.getElementById('dialog');
+    const toast = document.getElementById('toast');
+
+    if (dialog) {
+      new MutationObserver(function () {
+        setTimeout(inspectDialog, 30);
+      }).observe(dialog, {
+        attributes: true,
+        childList: true,
+        subtree: true
+      });
+    }
+
+    if (toast) {
+      new MutationObserver(function () {
+        setTimeout(inspectToast, 20);
+      }).observe(toast, {
+        attributes: true,
+        childList: true,
+        subtree: true
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installRPGAudio);
+  } else {
+    installRPGAudio();
+  }
+
+  /* Kontrol global tambahan jika nanti ingin dipanggil dari game. */
+  window.RPGAudio = {
+    init: initRPGAudio,
+    professor: professorEncounterSound,
+    shop: shopOpenSound,
+    purchase: purchaseSound,
+    token: tokenInsertSound,
+    quest: questCompleteSound,
+    error: errorSound,
+    startMusic: startRPGMusic,
+    stopMusic: stopRPGMusic
+  };
+})();
+</script>
+
 </body>
 </html>
